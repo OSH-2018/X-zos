@@ -1,16 +1,441 @@
-\documentclass{article}
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------                               
 
-    \usepackage{ctex}
-    
-    \title{淘汰通用操作系统 \\ 
-    \begin{large} 
-    Unikernel 的诞生，现状和未来    
-    \end{large} }
+\documentclass[fontsize=13pt, % Document font size
+    paper=a4, % Document paper type
+    twoside, % Shifts odd pages to the left for easier reading when printed, can be changed to oneside
+    captions=tableheading,
+    index=totoc,
+    hyperref]{labbook}
 
-    \author{Zoo 小组}
-    \date{2018-03-27}
+\usepackage[bottom=10em]{geometry} % Reduces the whitespace at the bottom of the page so more text can fit
 
-    \begin{document}
-        
-    \end{document}
-    
+% \usepackage[english]{babel} % English language
+\usepackage{setspace}
+\usepackage{ctex}
+\usepackage{lipsum} % Used for inserting dummy 'Lorem ipsum' text into the template
+
+\usepackage[utf8]{inputenc} % Uses the utf8 input encoding
+\usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
+
+\usepackage[osf]{mathpazo} % Palatino as the main font
+\linespread{1.05}\selectfont % Palatino needs some extra spacing, here 5% extra
+\usepackage[scaled=.88]{beramono} % Bera-Monospace
+\usepackage[scaled=.86]{berasans} % Bera Sans-Serif
+
+\usepackage{booktabs,array} % Packages for tables
+
+\usepackage{amsmath} % For typesetting math
+\usepackage{graphicx} % Required for including images
+\usepackage{etoolbox}
+\usepackage[norule]{footmisc} % Removes the horizontal rule from footnotes
+\usepackage{lastpage} % Counts the number of pages of the document
+
+\usepackage[dvipsnames]{xcolor}  % Allows the definition of hex colors
+\definecolor{titleblue}{rgb}{0.16,0.24,0.64} % Custom color for the title on the title page
+\definecolor{linkcolor}{rgb}{0,0,0.42} % Custom color for links - dark blue at the moment
+
+\addtokomafont{title}{\Huge\color{titleblue}} % Titles in custom blue color
+\addtokomafont{chapter}{\color{OliveGreen}} % Lab dates in olive green
+\addtokomafont{section}{\color{Sepia}} % Sections in sepia
+\addtokomafont{pagehead}{\normalfont\sffamily\color{gray}} % Header text in gray and sans serif
+\addtokomafont{caption}{\footnotesize\itshape} % Small italic font size for captions
+\addtokomafont{captionlabel}{\upshape\bfseries} % Bold for caption labels
+\addtokomafont{descriptionlabel}{\rmfamily}
+\setcapwidth[r]{10cm} % Right align caption text
+\setkomafont{footnote}{\sffamily} % Footnotes in sans serif
+
+\deffootnote[4cm]{4cm}{1em}{\textsuperscript{\thefootnotemark}} % Indent footnotes to line up with text
+
+\DeclareFixedFont{\textcap}{T1}{phv}{bx}{n}{1.5cm} % Font for main title: Helvetica 1.5 cm
+\DeclareFixedFont{\textaut}{T1}{phv}{bx}{n}{0.8cm} % Font for author name: Helvetica 0.8 cm
+
+\usepackage[nouppercase,headsepline]{scrpage2} % Provides headers and footers configuration
+\pagestyle{scrheadings} % Print the headers and footers on all pages
+\clearscrheadfoot % Clean old definitions if they exist
+
+\automark[chapter]{chapter}
+\ohead{\headmark} % Prints outer header
+
+\setlength{\headheight}{25pt} % Makes the header take up a bit of extra space for aesthetics
+\setheadsepline{.4pt} % Creates a thin rule under the header
+\addtokomafont{headsepline}{\color{lightgray}} % Colors the rule under the header light gray
+
+\ofoot[\normalfont\normalcolor{\thepage\ |\  \pageref{LastPage}}]{\normalfont\normalcolor{\thepage\ |\  \pageref{LastPage}}} % Creates an outer footer of: "current page | total pages"
+
+% These lines make it so each new lab day directly follows the previous one i.e. does not start on a new page - comment them out to separate lab days on new pages
+\makeatletter
+\patchcmd{\addchap}{\if@openright\cleardoublepage\else\clearpage\fi}{\par}{}{}
+\makeatother
+\renewcommand*{\chapterpagestyle}{scrheadings}
+
+% These lines make it so every figure and equation in the document is numbered consecutively rather than restarting at 1 for each lab day - comment them out to remove this behavior
+\usepackage{chngcntr}
+\counterwithout{figure}{labday}
+\counterwithout{equation}{labday}
+
+% Hyperlink configuration
+\usepackage[
+pdfauthor={}, % Your name for the author field in the PDF
+pdftitle={Laboratory Journal}, % PDF title
+pdfsubject={}, % PDF subject
+bookmarksopen=true,
+linktocpage=true,
+urlcolor=linkcolor, % Color of URLs
+citecolor=linkcolor, % Color of citations
+linkcolor=linkcolor, % Color of links to other pages/figures
+backref=page,
+pdfpagelabels=true,
+plainpages=false,
+colorlinks=true, % Turn off all coloring by changing this to false
+bookmarks=true,
+pdfview=FitB]{hyperref}
+
+\usepackage[stretch=10]{microtype} % Slightly tweak font spacing for aesthetics
+
+%\setlength\parindent{0pt} % Uncomment to remove all indentation from paragraphs
+
+%----------------------------------------------------------------------------------------
+%	DEFINITION OF EXPERIMENTS
+%----------------------------------------------------------------------------------------
+
+% Template: \newexperiment{<abbrev>}[<short form>]{<long form>}
+% <abbrev> is the reference to use later in the .tex file in \experiment{}, the <short form> is only used in the table of contents and running title - it is optional, <long form> is what is printed in the lab book itself
+
+\newexperiment{chapter I}[传统操作系统的设计思想及其起源。]{传统操作系统的设计思想及其起源。}
+\newexperiment{chapter II}[操作系统发展造成的瓶颈。]{操作系统发展造成的瓶颈。}
+\newexperiment{chapter III}[容器化技术，Unikernel及其设计出发点。]{容器化技术，Unikernel及其设计出发点。}
+
+\newsubexperiment{chap1.1}[Test	]{This is an example sub-experiment}
+\newsubexperiment{chap1.2}[Example sub-experiment 2]{This is another example sub-experiment}
+\newsubexperiment{chap1.3}[Example sub-experiment 3]{This is yet another example sub-experiment}
+
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\begin{spacing}{1.0}
+
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\title{\textcap{OS调研报告--有关Unikernel的一切 \\[1cm]  
+\textaut{Begining 2018-03-20}}}
+
+\author{
+\textaut{任正行}\\ \\ % Your name
+ZOO小组 % Your degree
+}
+\date{\today}
+
+\maketitle % Title page
+
+\printindex
+
+\tableofcontents % Table of contents
+\newpage % Start lab look on a new page
+
+\begin{addmargin}[4cm]{0cm} % Makes the text width much shorter for a compact look
+
+\pagestyle{scrheadings} % Begin using headers
+
+%----------------------------------------------------------------------------------------
+%	LAB BOOK CONTENTS
+%----------------------------------------------------------------------------------------
+
+\labday{传统操作系统的困境和Unikernel的出现}
+
+操作系统的发展和目前的缺陷有一定的历史渊源，在理解Unikernel的作用前，我们先了解了几个操作系统最重要的功能和设计的出发点。
+
+操作系统的主要设计思想和出发点有：
+
+进程管理：能够提供对正在运行的程序的抽象。管理程序的启动，终止。
+
+隔离： 提供操作系统与用户进程的隔离，以及用户间的隔离，程序的错误不能导致操作系统的崩溃，同时不同的进程之间的内存也应该是隔离的，
+一个程序的崩溃不应该影响另一个程序的运行。
+
+存储管理： 提供对存储器，I/O设备的抽象，以系统服务的形式供上层软件使用，隐藏了具体的技术细节，比如将键盘，
+显示设备，存储器映射成内存的某个地址，再编写相应的系统调用、驱动程序提供服务方便程序调用。
+
+简单来说，操作系统就是为使用计算机的人提供了一个方便的环境，其本身的功能并不需要代替应用程序，
+问题就在于，操作系统需要完成的这一点任务随着硬件的发展，安全环境越来越复杂，个人用户的使用需求变得越来越庞大了。
+我们先抛开PC机操作系统的设计，因为事实上PC机的用户需要的是开箱即用，无需费力配置的OS，那样本身就决定操作系统要与很多应用程序成为一体。
+只考虑云计算平台上的操作系统面临的问题。
+
+%-----------------------------------------
+
+\experiment{操作系统的发展瓶颈}
+
+计算机曾经非常庞大而且贵重，所以操作系统的设计使得我们可以在一台机器上运行尽可能多的应用，来确保满足不同的需求，
+所以操作系统应该是通用的：在任何时候可以满足任何可能的需求，部署任何可能的应用程序。正是这样的目的让操作系统的
+缺点变得越来越突出。还是针对云计算平台，目前面临的问题就有：
+
+安全问题：
+
+无论是个人PC机，云计算平台还是嵌入式系统，安全性从来就没有一个一劳永逸的解决方案，也许这不仅是一个技术问题，也是一个哲学问题。
+但无论如何，现在操作系统的复杂程度决定了我们很难真正掌握一个系统的安全状况。最常见的模式是：发现一个漏洞，修复一个，以后再发
+现漏洞。现有操作系统的冗余复杂，使得对计算机系统的维护变的十分困难，并且留下了大量的漏洞和攻击面(attack surface)，给恶意黑
+客以可乘之机。类似的例子有很多，拿windows10为例，仅2016年一年内，Microsoft为其修补的漏洞就达729个之多。“WannaCry”病毒
+也是利用windows系统中的“Enternalblue”漏洞来进行进攻的。
+
+尽管安全问题可以通过内核的可信化验证或者使用新的编程语言--比如RUST，得到解决，但是我们必须承认，功能越是复杂的系统，安全越成问题。
+
+安全问题在云计算时代直接与大量的宝贵信息和计算资源挂钩，云计算中心最禁不起严重漏洞造成的风险。Amazon, Microsoft, Yahoo,
+Linkin等公司都遭受过攻击，造成用户的信息泄漏，严重威胁用户的安全。2017年5月，“WannaCry”勒索病毒席卷全球，数十万电脑用户
+中招，造成的直接经济损失超过80亿美元。同年10月，东欧银行网络遭到黑客入侵，损失达上亿元。据不完全统计，每年全球仅因黑客攻击导
+致的直接经济损失达4500亿美元。从个人计算机到银行、政府的大型主机，无一不面临着黑客、木马等不安全因素的威胁。
+
+操作系统体积：
+
+除了安全问题之外，另一个明显的问题是操作系统过于庞大复杂，现在的软件栈完成它们的工作需要调用大量的系统服务。软件栈的构造从IBM
+PC的时代就已经开始了，然而到现在为止尽管硬件的速度已经提高了许多倍，软件栈却还保留着旧时代的传统。
+
+这样的状况在云计算中心意味着什么呢？我们需要浪费大量的空间去执行非常简单的任务，执行这些任务之前的初始化占用的资源甚至比应用程
+序本身还要多。
+
+操作系统运行速度：
+
+尽管CPU的计算能力有了巨大的提升，但是我们感受到的提升却非常有限。一方面这是因为存储器性能限制的因素，而另一方面，不可忽视的
+是，操作系统的复杂程度让其启动，运行都要有大量的工作，当然因为一些安全因素和完成应用程序的功能这些步骤是必要的。
+
+操作系统的复杂环境：
+
+还是由于软件栈的原因，每个应用程序都有它的运行环境，这些环境是由开发者使用的技术决定的，然而这并不是好事，因为开发者使用的环
+境和真实的运行环境很难做到完全一致。比如开发者编写的程序依赖的库，库的版本，操作系统等等都会和使用场景不一样，这样给开发和测
+试造成了很大的不方便。
+
+综合上述面临的问题来看，很多问题都涉及到同一个点：操作系统太过复杂，使我们很难确保执行每一个功能的模块都是安全的，还会让操作
+系统的效率降低，还会使开发与部署变得非常繁琐。然而在云计算平台上，这样的缺点有望通过容器技术得到解决。
+
+\experiment{容器化及Unikernel的出现}
+
+
+容器化技术解决的问题和实现原理：
+
+容器化技术，这里以docker为例，给云计算平台上的应用程序开发带来了一场革命，docker技术解决的问题就是软件的运行环境。想法非常
+简单：把软件和软件的依赖环境（运行库等）打包成一个整体，这样开发者不需要再担心开发测试环境和云平台环境的差别了。
+
+DOCKER的成功是无疑的，它采用了类似虚拟化的方式。容器之间需要共享一个操作系统，也分享操作系统提供的服务，这与传统的虚拟机不同
+。传统的虚拟机真的模拟出一个与宿主机独立的环境，拥有自己的软件和库，容器化技术相当于解决了不同虚拟机各自拥有了一套独立而重复的
+运行环境的问题。
+
+除了更少的空间占用外，相比传统虚拟机，docker运行的效率更高，这是因为它和其他的进程一样运行，而不用在一个虚拟化出来的相对较慢
+的计算机上运行。并且它也不需要像传统虚拟机一样等待系统boot，它就在host系统上运行。
+
+相比传统虚拟机，docker在资源占用，运行速度和效率上都有优势，但是它并没有解决安全问题，这似乎并不是docker的设计初衷。
+
+Unikernel解决的问题和实现原理：
+
+相比以docker为代表的容器技术，Unikernel是更好的选择，它确实比docker做得更加极端：不仅打包了程序运行所依赖的库，还有它需要
+的系统服务，也就是说，它完全作为一个专门化的虚拟机镜像运行，而不需要任何多余的模块。
+
+Unikernel 为了实现体量的缩小，选择了与Docker完全不同的路线。它只专注于一个目标程序，没有其它冗余的程序和支持，没有多进程切
+换，所以系统很小也很简单。虽然 Docker 容器的 image 比传统的虚拟机(以G计)要小很多，但是一般也是好几百兆，而 unikernel 由
+于不包含其它不必要的程序和服务(ls,echo,cd,tar等)，甚至没有Shell，所以体积非常小，通常只有几兆甚至可以更小。比如 mirageOS
+的示例 mirage-skeleton 编译出来的 xen 虚拟机只有 2M。体量的缩小也使得Unikernel的启动和运行的速度相较 Docker 有明显的提高。
+
+另外，Unikernel 没有其它不必要的程序，使其受到漏洞攻击的可能性大大降低，docker 里面虽然大多数情况只跑一个程序，但是里面含有
+其它 coreutils，只要其中任何一个有安全漏洞，整个服务可能就会受到攻击。而Unikernel 中没有 Shell 可用，没有密码文件，没有多余
+的设备驱动，只有少数功能可以利用，这严重限制了未经授权的用户可能造成的破坏。另一方面，对于Unikernel而言，每一个操作系统都是定制用途的，其中包含的核心库均不相同，即使某个服务构建的操作系统由于特定软件问题而遭到入侵，同样的入侵手段在其他的服务中往往不能生效。这无形中增加了攻击者利用系统漏洞的成本。
+
+这样的设计依赖于“库操作系统”，这并不是一个真正的操作系统，Unikernel的开发过程与嵌入式系统很像，类似于”交叉编译“，对于编好的
+程序，我们需要找到它运行所需要的最少条件，从库操作系统中选择出来与程序打包成虚拟机镜像。这意味着它很可能不能运行其他的程序。
+
+Unikernel System，一个知名 Unikernel 开发研究组织在2016年一月被Docker收购。作为当下最流行的应用容器引擎服务的提供商，Docker 
+这一收购足以说明 Docker 对于 Unikernel 的重视。
+
+Unikernel与docker的比较：
+
+Unikernel，Docker 二者经常被拿来相提并论。它们的主要意义都是用来替换云计算中使用传统虚拟机这一过于臃肿和有时不太安全的解决方案，
+但两者的区别非常明显。
+
+Docker 为云计算的操作系统提供了相较传统虚拟机一个更轻量级的选择。在很多方面，Docker 下的容器与虚拟机非常相似。它们都旨在为运行代
+码提供一个能支持代码运行的独立稳定的环境。最大的区别是 Docker 通过分享来减少重复。Docker 可以共享主机环境的 Linux 内核，也可以
+共享操作系统的其余部分，甚至它们还可以共享除应用程序代码和数据之外的所有内容。例如，我可以使用容器在同一台物理机器上运行两个博客。
+这两个容器可以设置为共享除模板文件，媒体上传和数据库之外的所有内容。借助一些复杂的文件系统技巧，每个容器都可以“认为”它具有专用的文
+件系统。
+
+%----------------------------------------------------------------------------------------
+
+\labday{Unikernel的理论解释和发展状况}
+
+\experiment{Unikernel的理论解释}
+
+在内存中，一个传统的应用程序是这样的：
+(picture of normal application stack)
+
+软件可以被分为内核空间和用户空间，内核空间有操作系统提供的服务和运行库，包括一些底层的硬件驱动，文件系统，内存管理等等。这样的设计
+也同时提供了用户与系统的隔离，进程的调度，以及其他多用户操作系统需要的功能。用户空间则提供具体的应用程序功能，在计算机的使用者看来
+，用户空间包含的是要运行的指令，而内核空间为用户空间的代码提供具体的功能实现的服务。
+
+然而在Unikernel中，软件栈变得不一样了：
+
+(picture of Unikernel application stack)
+
+可以看到这里已经没有用户空间和内核空间之分了，传统的设计是内核，运行库，应用程序。而在Unikernel中所有都是一体的，镜像中也只有一
+个应用程序运行，这里的代码已经包含了完成工作需要的所有代码。只需要作为一个系统镜像启动，完成所有的功能。
+
+看起来这种设计理念貌似是非常原始的，然而从操作系统的设计上出发我们会发现，最早人们设计系统调用，就是为了节省程序员在编写底层驱动上
+消耗的时间，专注于软件功能本身。实现这个目的的方式不仅有是设计一个“包罗万象”的操作系统，我们还可以根据运行程序的需要，为每个应用
+程序“定制”操作系统，当然这个定制过程是自动化的，过程很像交叉编译。
+
+如果我需要运行很多不同的操作系统呢？很简单，只需要为每个应用程序都制作Unikernel，再开多个虚拟机就可以了。
+
+%-----------------------------------------------------------------------------------------------------------
+\experiment{Unikernel的优势和劣势}
+
+Unikernel采用的设计专门操作系统的想法并不是第一个，eliminate general purpose operating system的想法早就有人提出来了，但是
+应用的场景实在太小，无法得到大范围应用。但是现在Unikernel的适用环境恰恰符合云计算平台--我们需要让虚拟机更小，更快，更安全。
+
+小： 很多虚拟机镜像因为移除了复杂的软件栈，常常不足1MB，完成的功能相同，这并不奇怪--比如我要写一个hello world程序，不需要shell，
+不需要网卡驱动，只需要一些I/O的管理和进程调度即可。当前的软件堆栈（software stack）一般由成百上千个部分组成，经常需要使用千兆字节
+的内存和磁盘空间。他们花费大量宝贵的时间用于启动和关闭，大而缓慢。自从IBM PC出现之后，人们构建软件堆栈的方法几乎没有变化。37年来，
+我们一直在采用在硬件大而缓慢的时候设计的堆栈方法。如今，硬件系统已经发生了天翻地覆的变化，操作性能比过去有了数千倍的提高，为什么我们
+还在使用这种已经显然过时的堆栈方法呢？如果硬件系统发生了如此大的变化，那么软件系统是否也需要相应的进化以适应硬件的发展呢？
+
+答案是显然的。Unikernal的出现正是对这一需求的呼应。想象一下一下子抹去95\%的内核（你的应用根本不需要那些）是一种什么体验？省出大量
+的硬盘空间、应用运行得更加流畅——Unikernal正是这样！Unikernel 镜像都很小，由 MirageOS实现的一个 DNS server 才 184KB，一个 w
+eb server 仅仅674 KB，小到令人恐怖的程度。因此开发在Unikernal上的项目通常没有传统操作系统的弊端，这无疑使它更加适应现代硬件系统。
+
+快： 移除了传统的软件栈设计之后，Unikernel的风格是直入主题，将一切变得简单化，效率自然变得很高。对传统操作系统来说，也许那十几秒的
+开机时间在你看来并不慢，但是在大型主机中，现有计算机的运行速度仍不能很好地满足要求，还有极大的改进空间。这一改进可以从计算机硬件入手
+，比如制造更大规模的集成芯片、提高cpu主频等等，但如果从操作系统入手，可能会产生更好的效果。
+
+Unikrenal可以说是从操作系统入手，提高电脑运行速度的一个很好的尝试。由于Unikernal的轻量，精简了冗余的结构，删减了多余的步骤，其启动
+与停止都在毫秒级别，远远快于常规操作系统。运行在其上的应用程序也更加高效。
+
+安全性： 这可能是Unikernel的最重大的优势，其实很多漏洞与应用程序没有关系，反而与应用程序并没有调用的系统服务有关系，移除了不需要的
+内容，也就大大降低了系统被攻击的机会。举例来说：设计了一个与用户进行通信的网络服务器，如果用户要攻击骗取控制权，它会发现很难下手，因
+为除了服务器需要的功能，其他的部件都被移除了，甚至连shell都没有。Unikernel的设计在保证了程序正常运行的同时，也大大限制了攻击者。在
+计算机领域，有时候小而简单的东西相对而言更加安全，维护起来也更加容易，Unikernal就是这样。Unikernal中没有shell，没有密码文件，也
+舍去了那些可能成为干扰源的视频和驱动。这极大地降低了Unikernal发生错误的可能，带来了更少的漏洞和更小的攻击面，大大地提高了安全性。
+
+然而Unikernel并不是现代操作系统的救星，它也需要在一些优势和劣势之间作出权衡。其中最明显的几个劣势如下：
+
+单进程：Unikernel的内部环境更像一个裸机，线性的，原始的内存状态，只有一个进程（不过多线程还是可以实现的），其实要做一个多进程的程
+序也不是不可能，但是进程管理（启动，终止，监视进程等等）会造成很大的开销，Unikernel的优势会被削弱。
+
+单用户：需要说明的是，单用户并不一定是缺陷，同样多用户的支持也需要很大的开销，如果要支持多用户，那就需要登录，验证，权限管理，用户之
+间的隔离，还要有一些安全验证防止欺骗。但问题是：为什么一定需要多用户呢？Unikernel使用场景决定可以让一个用户占有一整个虚拟机。
+
+糟糕的debug： 如果在开发过程，那样程序的debug比较简单：和正常的debug过程没有什么区别。但是在运行过程中如果出了问题，我们看不到栈，
+没有tcpdump，没有传统的debug信息支持，我们很难知道到底出了什么问题。
+
+\experiment{Unikernel的应用场景}
+
+在了解了Unikernel的一些劣势之后，我们很容易得出什么时候该用Unikernel，从而最大程度发挥Unikernel的优势：
+
+1. 不需要在一台机器上运行多个进程。
+
+2. 只需要单用户。
+
+3. 需要非常快的开启速度。
+
+4. 需要接入网络，对安全性有很高的要求。
+
+5. 可能需要大量部署的程序。
+
+6. 程序自带一套机制提供程序崩溃时的诊断。
+
+7. 不需要经常迭代版本或进行维护。
+
+\experiment{Unikernel的生态}
+
+\subexperiment{Jitsu}
+
+Jitsu 是 “Just-in-time summoning of unikernels”的缩写，事实上它是一个DNS服务器，当它收到请求时，会快速启动Unikernel来对
+请求者提供服务，这样相当于快速地生成了服务器，简单来说，它就是一个即时启动Unikernel的服务器。
+
+Jitsu的作用就在于它实现了一个叫临时微服务器的概念(Transistent microserver)，因为Unikernel的boot时间只有几十毫秒，是很理想的
+动态建立服务器的方式。
+
+\subexperiment{Rump Kernels}
+
+Rump Kernels的设计理念基于NetBSD,一个跨平台性能很好的操作系统，为了实现很好的跨平台性，NetBSD的设计非常适用于各种不同的硬件平台，
+替换某个硬件驱动后仍可以正常运转，所以NetBSD可以在很多硬件平台上部署。
+
+Rump Kernels是Rumprun（一个支持POSIX的Unikernel实现）的基础，因为在Unikernel的开发中，需要做的其实是一个交叉编译，目标平台
+与自己的机器并不相同。
+
+\subexperiment{Xen Project Hypervisor}
+
+Unikernel的本质是一台虚拟机，而Xen虚拟化技术提供了一种叫paravirtualization的技术。这项技术使得一些虚拟机“知道”自己在一个H
+ypervisor上而不是一台真正的机器上。那么虚拟机与Hypervisor的交互就不需要“模拟”一台真实的机器了。
+
+这项技术使得Xen项目成为Unikernel的首选运行平台，paravirtualization使得Unikernel可以非常高效地与宿主机进行通信，使得启动并
+管理大量的Unikernel成为可能，目前，在运算规模随Unikernel的数目成线性增长的情况下，hypervisor可以同时运行大约1000个Unikernel。
+
+\subexperiment{Clive OS}
+
+Clive 是一个云操作系统，旨在提供简单高效的云计算服务，目前主要被用来虚拟机上提供进一步的开发支持。
+
+简单来说，Clive是一个用Go语言设计的Unikernel实现，设计者修改了Go语言的编译器和Runtime来提供更好的网络服务。
+
+\subexperiment{MiniOS}
+
+MiniOS 是在Xen项目的基础上的操作系统，MiniOS可以用来运行大量的Unikernel应用，包括MiregeOS和ClickOS。而对于自己来说，MiniOS什
+么也不做，它的价值在于很容易被修改使Unikernel可在上面运行。它简化了Unikernel的开发周期。
+
+\experiment{Unikernel的改进可能}
+
+\subexperiment{更进一步：Unikernel Monitor}
+
+现在Unikernel的结构是这样的
+
+也就是说，我们用Unikernel的方法Specialize的部分是OS，然而，其实在Unikernel下面一层的Monitor也可以进行Specialize,这样它
+们直接运行在hypervisor之上(比如xen和kvm)，这样做的好处当然是进一步优化了软件栈，可以获得更高的运行效率。
+
+\subexperiment{Debug环境的优化}
+
+Unikernel的程序运行方式决定它很难像普通的应用程序一样进行调试，但是这并不代表Unikernel是完全不可调试的，其实我们已经不能像看待
+传统的虚拟机一样看待Unikernel，应该对Unikernel运行过程中出现的意外情况有相应的保护措施和追踪记录，以此方便开发者进行维护。
+
+\subexperiment{Unikernel和Docker结合}
+
+Unikernel和Docker的思想类似--打包，但是二者各有优缺点和合适的使用场景，二者不是竞争关系，并不存在一个淘汰另一个之说。
+
+2015年的Hyper项目实现了在hypervisor上面运行一个Docker，相当于拿掉了操作系统一层，这样的技术就与Unikernel非常类似。这么做大
+大限制了攻击者的空间，提高了Docker的安全性。
+
+%---------------------------------------------------------------------------------------- 
+
+\labday{我们要做什么}
+
+由于 Unikernel 的结构组成的特殊性，一些程序想要移植到 Unikernel 上往往需要将代码完全重写（而且现在比较成熟的Unikernel实现往
+往需要使用冷门的编程语言，开发接口的难度也很大），这一定程度影响了可移植性。而且 Unikernel 并不是传统的程序，开发和测试都与传统
+的有不小的差别，造成了开发难度的增大。
+
+在开发过程中，开发者可以在传统的操作系统上进行开发，而所有内核相关的功能，暂且由开发机的操作系统提供。
+
+而在测试环境中，大部分 Unikernel 的实现会将应用代码与需要的内核模块构建成 Unikernel 后，再将其跑在一个传统的操作系统上，利用
+传统操作系统上的工具来测试 Unikernel。以 Rumprun为例，它可以通过 KVM / QEMU 来运行一个 Rumprun Unikernel VM，随后用 Ho
+st OS 上的 GDB 来对其进行调试，这跟我们实验中测试内核的步骤比较相似，那么我们在实验中对于内核调试的种种遗憾，如调试器容易有 bug
+，编译调试步骤繁琐，命令或者说功能不够丰富科学等等，也可以投影到 Unikernel 的开发调试上。联想诸如 Pycharm ，Vs Studio 这些成
+熟的 IDE，它们丰富的调试辅助功能，对开发效率的提高是非常显著的，也变相地降低了编程开发测试的难度，降低了编程的门槛，促进了语言的普
+及。那么，如果我们对于 Unikernel 的测试环境能有所改进，小到改进 debugger 一些缺点，大到开发一个相应的 IDE，就可能为促进 Unik
+ernel 的实用化和普及，创建一个更高效的云计算世界做出一份贡献。这正是我们想要做的。
+
+\end{addmargin}
+
+%----------------------------------------------------------------------------------------
+%	BIBLIOGRAPHY
+%----------------------------------------------------------------------------------------
+
+\begin{thebibliography}{9}
+
+\bibitem{lamport94}
+Leslie Lamport,
+\emph{\LaTeX: A Document Preparation System}.
+Addison Wesley, Massachusetts,
+2nd Edition,
+1994.
+
+\end{thebibliography}
+
+%----------------------------------------------------------------------------------------
+
+\end{spacing}{1.0}
+
+\end{document}
