@@ -31,11 +31,11 @@ int ret; /* OUT */
 
 一些 unikernel 通过采用精明的包管理策略和对包依赖的追踪 （dependency tracking） 使得构建的 Library OS 的体量达到近似的最小值。例如 MirageOS，与 OCaml 的包管理器，OPAM 联动来追踪包依赖，它能生成基于 OCaml（Objective Caml，是 Caml 编程语言的主要实现）的 unikernel。追踪管理的包依赖覆盖面非常广，即使是一些通常会被操作系统包含的模块也会被追踪，如 TCP stack。下面的例子里，app 需要 TCP，因此在编译的时候，toolchain 会选择 TCP 模块和一个网络接口驱动 net-front 加入 unikernel 中。因为 这个 app 不需要使用文件系统，toolchain 从构建的 unikernel 中除去了 filesystem modules 和 block device driver。 这就是一个 unikernel 通常的构建和精简过程。
 
-![1524589226061](C:\Users\wo\AppData\Local\Temp\1524589226061.png)
+![1524589226061](ukvm1.png)
 
 论文中他们提出将通过修改toolchain 和包管理器将 dependency tracking 的范围扩展到 monitor 的层次。上图的 （b）展示的就是这样的想法，不像标准的 unikernel 和其 monitor，（b）的unikernel 和 monitor 不是为了虚拟化一般性的网络设备操作而构建的。unikernel 中的 TCP 只有一个用 TAP 设备实现的网络操作，所以，构建时，toolchain 不仅删去了 unikernel 中的 filesystem 模块和 设备驱动模块，也删去了 monitor 中相应的模块，只在 monitor 中剩下 TAP 和 guest setup 模块。其中的 guest setup 模块是 monitor 中默认会包含的模块，负责引导启动 unikernel 和运行结束是清除 unikernel。这样构建的 specialized unikernel monitor 和 unikernel 代码行数与常见的 general purpose monitor 和 unikernel 的代码行数对比如下，可以见到 monitor 部分，专门化的 monitor 代码量大大缩减。
 
-![1524591685870](C:\Users\wo\AppData\Local\Temp\1524591685870.png)
+![1524591685870](ukvm2.png)
 
 为了实现这样一个系统，还有一些问题需要解决。如何确定或者另外编写模块，尤其是那些跨越接口的？ 包或者模块应该要多大？ 如何通过这些包或者模块自动构建一个完整的 unikernel monitor？
 
@@ -47,7 +47,7 @@ Ukvm 工作时装载 kernel ELF executable (solo5+mirage)，创建 KVMVCPU，并
 
 下面的是比较 ukvm，lkvm(最近推出的一种精简容器)，QEMU 在执行相同的任务时的初始化，响应和执行时间。可以见到测试中 ukvm 都取得了很好的结果。
 
-![1524591934745](C:\Users\wo\AppData\Local\Temp\1524591934745.png)
+![1524591934745](ukvm3.png)
 
 
 
