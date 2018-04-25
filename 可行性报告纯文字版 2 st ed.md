@@ -85,10 +85,60 @@ void print_log(FILE *p);
 
 #### 改变2：gdb 远程调试的过程
 
-在这学期第一个实验中，我们对内核进行了调试，就是用的gdb进行远程调试。
+在这学期第一个实验中，我们对内核进行了调试，就是用的gdb进行远程调试。而对于unikernel来说，它还是一个虚拟机，只不过比较特殊，因而我们可以对它进行远程调试，甚至直接改变unikernel的运行状态（通过修改内存和寄存器的值）所以我们可以做到的是，通过远程调试让unikernel的整个状态呈现在开发者面前，包括所有的程序员可见状态：内存，寄存器的值，变量值，函数调用等等。
 
 #### 一个设想（已经毙掉）
 
 能不能完全像管理一个应用程序一样管理unikernel呢？我们希望monitor提供的接口能够提供像一个正常的应用程序一样的抽象，那样会不会让unikernel的管理难度降低呢？
 
 这个问题在和其他小组成员进行讨论后我们认为不行，原因很简单，我们平时能够非常方便地管理进程，就是因为在背后有很多层的抽象机制，也正是这些造成的开销。我们不希望这种问题存在，目前看来，unikernel为了得到卓越的性能牺牲了很多原本非常人性化的设计理念，但是其性能带来的巨大回报值得我们作出改变，也有很多可以在保证效率的前提下改善其开发和维护效率的方法。
+
+### GDB工作原理  
+#### 一. 基于ptrace的系统调用  
+
+  > 函数原型：
+  ```C
+    long ptrace(enum __ptrace_request request, pid_t pid,void *addr,void *data); 
+  ```  
+>  *equest参数的主要选项*：
+1. **PTRACE_TRACEME**：由子进程调用，表示本进程将被其父进程跟踪，交付给这个进程的所有信号，即使信号是忽略处理的（除SIGKILL之外），都将使其停止，父进程将通过wait()获知这一情况。
+2. **PTRACE_ATTACH**：attach到一个指定的进程，使其成为当前进程跟踪的子进程，而子进程的行为等同于它进行了一次PTRACE_TRACEME操作。但是，需要注意的是，虽然当前进程成为被跟踪进程的父进程，但是子进程使用getppid()的到的仍将是其原始父进程的pid。
+这下子gdb的attach功能也就明朗了。当你在gdb中使用attach命令来跟踪一个指定进程/线程的时候，gdb就自动成为改进程的父进程，而被跟踪的进程则使用了一次PTRACE_TRACEME，gdb也就顺理成章的接管了这个进程。
+3. **PTRACE_CONT**：继续运行之前停止的子进程。可同时向子进程交付指定的信号。
+
+####　二. gdb调试的三种方式
+
+* attach并调试一个已经运行的进程： 
+确定需要进行调试的进程id,运行gdb，输入attch pid，如：gdb 12345。gdb将对指定进行执行如下操作：ptrace（PTRACE_ATTACH，pid，0,0 )  
+* 运行并调试一个新的进程:
+运行gdb，通过命令行参数或file指定目标调试程序，如gdb ./test
+输入run命令，gdb执行下述操作：
+通过fork()系统调用创建一个新进程
+在新创建的子进程中调用ptrace(PTRACE_TRACEME，0,0,0）
+在子进程中通过execv（）系统调用加载用户指定的可执行文件   
+* 远程调试目标主机上新创建的进程
+gdb运行在调试机，gdbserver运行在目标机，通过二者之间定义的数据格式进行通信
+
+###  一个gdb远程调试unikernal的实例：
+  > Howto: Debugging Rumprun with gdb
+  Generally speaking, use `rumprun [platform] -p -D [port]` and `target remote:[port]` in gdb.
+
+> #### Debugging 64-bit unikernels under KVM/QEMU
+Debugging a 64-bit rumprun unikernel under KVM/QEMU requires the following workaround due to a [GDB issue](https://sourceware.org/bugzilla/show_bug.cgi?id=13984):
+
+> 1. Start the unikernel, leaving it paused and waiting for GDB to connect: 
+  ````
+  rumprun [kvm|qemu] -p -D 1234 [...]
+  ````
+
+> 2. Run the following GDB command:
+  ````
+  gdb -q -ex "target remote:1234" -ex "hbreak x86_boot" -ex "continue" -ex "disconnect" -ex "quit" unikernel.bin
+  ````
+
+>  This will cause the unikernel to proceed past the transition from 32-bit mode to long mode and remain in a paused state.
+3. Re-launch GDB a second time as you would normally.
+
+### 关于unikernal的内存空间
+
+Unikernel采用了比较原始的单地址空间方式，这反而倒简化了我们调试的难度，单地址空间有助于我们定位需要的信息在的位置，而并不会影响unikernel的性能。
