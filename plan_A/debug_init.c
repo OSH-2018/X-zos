@@ -21,20 +21,19 @@ void debug_init(debug_link *thelink) {
   if(thelink->unik_sockfd < 0)
     fprintf(stderr, "ERROR ON CREATING SOCKET\n"); // this must be replaced.
 
-  thelink->portnum = 2333;
+  thelink->portnum = atoi("2333");
 
   thelink->unik_sockaddr.sin_family = AF_INET;
   thelink->unik_sockaddr.sin_addr.s_addr = INADDR_ANY;
-  thelink->unik_sockaddr.sin_port = htons(protnum);
+  thelink->unik_sockaddr.sin_port = htons(thelink->portnum);
 
-  int m = bind(thelink->unik_sockfd, (struct sockaddr *)&(thelink->unik_sockaddr), sizeof(sockaddr_in));
+  int m = bind(thelink->unik_sockfd, (struct sockaddr *)&(thelink->unik_sockaddr), sizeof(struct sockaddr_in));
 
   if (m < 0)
     fprintf(stderr, "ERROR ON BINDING\n"); // replace .
 
+  thelink->clilen = sizeof(struct sockaddr_in);
   listen(thelink->unik_sockfd, 5);
-  thelink->clilen = sizeof(cli_addr);
   thelink->host_sockfd = accept(thelink->unik_sockfd, (struct sockaddr *)&(thelink->host_sockaddr), &(thelink->clilen));
 
-  return 0;
 }
