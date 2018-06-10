@@ -1,6 +1,6 @@
 /*
-this is the file that defines the method used for debug
-initialization. we set up the server, wait for connection.
+  this is the file that defines the method used for debug
+  initialization. we set up the server, wait for connection.
 */
 
 #include <stdio.h>
@@ -10,30 +10,31 @@ initialization. we set up the server, wait for connection.
 #include <netinet/in.h>
 #include <unistd.h>
 #include <string.h>
+#include "umonitor.h"
 
-void debug_init() {
-  int debug_sockfd, new_sockfd, portnum, clilen;
-  struct sockaddr_in serv_addr, cli_addr;
-  protnum = 2333;
+void debug_init(debug_link *thelink) {
 
-  debug_sockfd = socket(AF_INET, SOCK_STREAM, 0);
+  memset(thelink, 0, sizeof(debug_link));
 
-  if(debug_sockfd < 0)
-    fprintf(stderr, "ERROR ON CREATING SOCKET\n");
+  thelink->unik_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
-  bzero((char *)&sevr_addr, sizeof(serv_addr));
-  serv_addr.sin_family = AF_INET;
-  serv_addr.sin_addr.s_addr = INADDR_ANY;
-  serv_addr.sin_port = htons(protnum);
+  if(thelink->unik_sockfd < 0)
+    fprintf(stderr, "ERROR ON CREATING SOCKET\n"); // this must be replaced.
 
-  int m = bind(debug_sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+  thelink->portnum = 2333;
+
+  thelink->unik_sockaddr.sin_family = AF_INET;
+  thelink->unik_sockaddr.sin_addr.s_addr = INADDR_ANY;
+  thelink->unik_sockaddr.sin_port = htons(protnum);
+
+  int m = bind(thelink->unik_sockfd, (struct sockaddr *)&(thelink->unik_sockaddr), sizeof(sockaddr_in));
 
   if (m < 0)
-    fprintf(stderr, "ERROR ON BINDING\n");
+    fprintf(stderr, "ERROR ON BINDING\n"); // replace .
 
-  listen(debug_sockfd, 5);
-  clilen = sizeof(cli_addr);
-  new_sockfd = accept(debug_sockfd, (struct sockaddr *)&cli_addr, &clilen);
+  listen(thelink->unik_sockfd, 5);
+  thelink->clilen = sizeof(cli_addr);
+  thelink->host_sockfd = accept(thelink->unik_sockfd, (struct sockaddr *)&(thelink->host_sockaddr), &(thelink->clilen));
 
   return 0;
 }
