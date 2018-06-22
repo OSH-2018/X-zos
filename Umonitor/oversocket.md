@@ -29,3 +29,7 @@ rumprun qemu -i \
         -W if,inet,static,10.0.120.101/24 \
         server_rump.bin
 ```
+
+1. write an interface to set up unikernel.
+2. an interface to monitor them.
+3. an interface to see the log.
