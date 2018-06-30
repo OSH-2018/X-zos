@@ -15,5 +15,7 @@ typedef struct {
 
 extern void debug_init(debug_link *thelink);
 extern int send_log(debug_link *thelink, char *format, ...);
+extern int send_error(debug_link *thelink, char *format, ...);
+extern int send_warning(debug_link *thelink, char *format, ...);
 
 #endif

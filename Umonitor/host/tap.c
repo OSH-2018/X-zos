@@ -24,10 +24,6 @@
 int debug;
 char *progname;
 
-/**************************************************************************
- * tun_alloc: allocates or reconnects to a tun/tap device. The caller     *
- *            must reserve enough space in *dev.                          *
- **************************************************************************/
 int tun_alloc(char *dev, int flags) {
 
   struct ifreq ifr;
@@ -58,10 +54,6 @@ int tun_alloc(char *dev, int flags) {
   return fd;
 }
 
-/**************************************************************************
- * cread: read routine that checks for errors and exits if an error is    *
- *        returned.                                                       *
- **************************************************************************/
 int cread(int fd, char *buf, int n){
 
   int nread;
@@ -73,10 +65,6 @@ int cread(int fd, char *buf, int n){
   return nread;
 }
 
-/**************************************************************************
- * cwrite: write routine that checks for errors and exits if an error is  *
- *         returned.                                                      *
- **************************************************************************/
 int cwrite(int fd, char *buf, int n){
 
   int nwrite;
@@ -88,10 +76,6 @@ int cwrite(int fd, char *buf, int n){
   return nwrite;
 }
 
-/**************************************************************************
- * read_n: ensures we read exactly n bytes, and puts them into "buf".     *
- *         (unless EOF, of course)                                        *
- **************************************************************************/
 int read_n(int fd, char *buf, int n) {
 
   int nread, left = n;
@@ -107,9 +91,6 @@ int read_n(int fd, char *buf, int n) {
   return n;
 }
 
-/**************************************************************************
- * do_debug: prints debugging stuff (doh!)                                *
- **************************************************************************/
 void do_debug(char *msg, ...){
 
   va_list argp;
@@ -121,9 +102,6 @@ void do_debug(char *msg, ...){
   }
 }
 
-/**************************************************************************
- * my_err: prints custom error messages on stderr.                        *
- **************************************************************************/
 void my_err(char *msg, ...) {
 
   va_list argp;
@@ -133,9 +111,6 @@ void my_err(char *msg, ...) {
   va_end(argp);
 }
 
-/**************************************************************************
- * usage: prints usage and exits.                                         *
- **************************************************************************/
 void usage(void) {
   fprintf(stderr, "Usage:\n");
   fprintf(stderr, "%s -i <ifacename> [-s|-c <serverIP>] [-p <port>] [-u|-a] [-d]\n", progname);
@@ -308,7 +283,6 @@ int main(int argc, char *argv[]) {
     }
 
     if(FD_ISSET(tap_fd, &rd_set)) {
-      /* data from tun/tap: just read it and write it to the network */
 
       nread = cread(tap_fd, buffer, BUFSIZE);
 
@@ -324,8 +298,6 @@ int main(int argc, char *argv[]) {
     }
 
     if(FD_ISSET(net_fd, &rd_set)) {
-      /* data from the network: read it, and write it to the tun/tap interface.
-       * We need to read the length first, and then the packet */
 
       /* Read length */
       nread = read_n(net_fd, (char *)&plength, sizeof(plength));
@@ -336,11 +308,8 @@ int main(int argc, char *argv[]) {
 
       net2tap++;
 
-      /* read packet */
       nread = read_n(net_fd, buffer, ntohs(plength));
       do_debug("NET2TAP %lu: Read %d bytes from the network\n", net2tap, nread);
-
-      /* now buffer[] contains a full packet or frame, write it into the tun/tap interface */
       nwrite = cwrite(tap_fd, buffer, nread);
       do_debug("NET2TAP %lu: Written %d bytes to the tap interface\n", net2tap, nwrite);
     }

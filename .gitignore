@@ -1,2 +1,7 @@
-Unikernel.aux
-Unikernel.log
+Umonitor/host/demo-rumprun.bin
+Umonitor/host/demo_rumprun.bin.log
+Umonitor/host/monitor
+Umonitor/host/test
+Umonitor/unikernel/client
+Umonitor/unikernel/demo-rumprun
+Umonitor/unikernel/demo-rumprun.bin
