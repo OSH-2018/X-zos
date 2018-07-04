@@ -1,17 +1,27 @@
-#ifndef UMONITOR_H_INCLUDED
-#define UMONITOR_H_INCLUDED
+/**
+ * this file defiines the function that receives / send.
+ */
+
+#ifndef HOST_H_INCLUDED
+#define HOST_H_INCLUDED
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <string.h>
 #include <time.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 typedef struct uni_info {
   char name[32];
   char ip[32];
   int port;
 } uni_info;
+
+extern int run_script(int num);
 
 void msg_phrase(char *dst, char *msg) {
   // add some extra infomation to the msg.

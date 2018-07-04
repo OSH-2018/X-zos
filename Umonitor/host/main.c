@@ -1,3 +1,8 @@
+/**
+ * this file contains the main program that is 
+ * responsible for communicate with the user.
+ */
+
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/socket.h>
@@ -8,7 +13,7 @@
 #include <stdlib.h>
 #include <netdb.h>
 #include <arpa/inet.h>
-#include "umonitor.h"
+#include "host.h"
 
 uni_info info[512];
 int c_num = 0;
@@ -23,7 +28,7 @@ void string_phrase(char *string) {
 }
 
 void allocate_ip(int num) {
-  sprintf(info[num].ip, "10.0.120.%d", 1+num);
+  sprintf(info[num].ip, "10.0.120.%d", 2+num);
   return ;
 }
 
@@ -55,6 +60,14 @@ void load_config(char *fname) {
       c_num++;
     }
   }
+}
+
+int run_script(int num) {
+  char run_cmd[128];
+  sprintf(run_cmd, "qemu -i -I if,vioif, '-net tap, script=no,ifname=tap0' \\ 
+  -W if,inet,static, %s, %s", info[num].ip, info[num].name);
+
+  return system(run_cmd);
 }
 
 int main(int argc, char *argv[]) {
@@ -112,7 +125,7 @@ int main(int argc, char *argv[]) {
       for (j = 0; j <= num - 1; j++)
         if (strcmp(info[j].name, name) == 0)
           break;
-
+      run_script(j);
       pthread_create(&connects[c_num], NULL, &uni_connect, (void *)&(info[j]));
       //pthread_join(connects[c_num], NULL);
 
