@@ -81,7 +81,21 @@ umonitor的功能主要是建立unikernel与host之间的连接，并接收unike
 
 这里我们考虑了实际应用中的场景：一般来说我们希望监视多个unikernel的运行状态，并且将各个unikernel的日志写到不同的文件中去，这样才符合人们的习惯。这就涉及到分配IP，分配端口，启动，连接的过程。
 
-分配IP时，我们采用了
+分配IP时，我们采用了逐个分配的方法。10.0.120.1分配给host，其他的逐个分配给unikernel。
+
+```c
+void allocate_ip(int num) {
+  sprintf(info[num].ip, "10.0.120.%d", 2+num);
+  return ;
+}
+
+void allocate_port(int num) {
+  info[num].port = 2333+num;
+  return ;
+}
+```
+
+注：info为储存unikernel信息的结构体。
 
 ### 判断状态，发送与接收信息
 
@@ -89,11 +103,31 @@ umonitor的功能主要是建立unikernel与host之间的连接，并接收unike
 
 目前我们设计的接收到的日志消息分为3种：普通的日志（函数调用栈，参数名称和对应的值），警告日志（比如传入了NULL指针，发生了运算溢出），错误日志（发生了除0错误，或者访问NULL指针等）。这些信息可以让监视着对于unikernel的运行过程有更清楚的了解，在发现unikernel运行出现问题的时候通过日志可以完全恢复出其运行状态，从而方便地定位错误进行修复。
 
-比如说：在
+比如说：在unikernel运行过程中要发送一个warning，只需要调用接口：
+
+```c
+send_log(link, WARNING, "%s: NULL pointer", __func__);
+```
+
+这样就可以知道在哪个函数发生了可能的错误。
 
 ### 记录日志，必要的时候给出报错信息
 
-(这里应该还需要加一些代码什么的。)
+host端接收到消息之后还需要进行处理，最基本的操作是将日志写入文件中，根据发来的信息消息，判断这是一个正常的操作，还是一个可能引起异常的警告，或者它检测到了一个错误，不能再继续执行下去。
+
+```c
+  while(recv(ser_fd, recv_buf, 128, 0) > 0) {
+    msg_phrase(msg, recv_buf);
+    fprintf(fp, "%s\n", msg);
+    i ++;
+    if (i == 10) fflush(fp);
+  }
+
+  fflush(fp);
+  fclose(fp);
+```
+
+其中msg_phrase就是将发送过来的信息进行解析，格式化处理的函数。
 
 ## 未来扩展
 

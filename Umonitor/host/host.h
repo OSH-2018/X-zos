@@ -34,12 +34,14 @@ void msg_phrase(char *dst, char *msg) {
   char sign[32];
   memset(sign, 0, 32);
   char l = msg[0];
-  if (l == 3)
+  if (l == 'm')
     sprintf(sign, " \033[32m message: \033[0m ");
-  else if(l == 5)
+  else if(l == 'w')
     sprintf(sign, " \033[33m warning: \033[0m ");
-  else if(l == 2)
+  else if(l == 'f')
     sprintf(sign, " \033[31m error: \033[0m ");
+  else if(l == 'r')
+    sprintf(sign, " \033[32m return: \033[0m ");
 
   sprintf(dst, "%d-%d %d:%d:%d -- %s %s", tm_now->tm_mon, tm_now->tm_mday, tm_now->tm_hour, tm_now->tm_min, tm_now->tm_sec, sign, msg + 1);
   return ;

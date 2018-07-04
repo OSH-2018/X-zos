@@ -64,8 +64,7 @@ void load_config(char *fname) {
 
 int run_script(int num) {
   char run_cmd[128];
-  sprintf(run_cmd, "qemu -i -I if,vioif, '-net tap, script=no,ifname=tap0' \\ 
-  -W if,inet,static, %s, %s", info[num].ip, info[num].name);
+  sprintf(run_cmd, "qemu -i -I if,vioif, '-net tap, script=no,ifname=tap0' -W if,inet,static, %s, %s", info[num].ip, info[num].name);
 
   return system(run_cmd);
 }
@@ -104,11 +103,10 @@ int main(int argc, char *argv[]) {
       }
       else {
         char ip_t[20];
-        sprintf(info[num].ip, "10.0.120.%d", 101+num);
+        sprintf(info[num].ip, "10.0.120.%d", 2+num);
         info[num].port = 2333;
 
-        printf("ip addr: 10.0.120.%d, port = %d\n", 101+num, 2333+num);
-
+        printf("ip addr: 10.0.120.%d, port = %d\n", 2+num, 2333+num);
         num ++;
       }
     }

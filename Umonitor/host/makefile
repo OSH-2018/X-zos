@@ -1,2 +1,2 @@
-test: main.c umonitor.h
+test: main.c host.h
 	gcc main.c -o test -lpthread
